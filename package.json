@@ -1,0 +1,24 @@
+{
+  "name": "alexa-grr-feed",
+  "version": "0.0.1",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.16.2",
+    "node-fetch": "^1.7.3",
+    "moment-timezone": "^0.5.14"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Thinkful-Ed/hyperdev-req-resp-ex-2"
+  },
+  "keywords": [
+    "promises",
+    "node",
+    "express"
+  ],
+  "license": "MIT"
+}
