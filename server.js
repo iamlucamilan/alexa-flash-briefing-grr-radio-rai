@@ -7,7 +7,6 @@ const fetch = require('node-fetch');
 
 const app = express();
 
-
 function setTime(time) {
   var date = time.split('del')[1].trim();
   var rome = moment.tz(date,"DD/MM/YYYY hh:mm", "Europe/Rome");
@@ -15,41 +14,25 @@ function setTime(time) {
   return utc.format();
 };
 
-
-// `res.json` converts JavaScript objects to JSON and
-// appropriately sets the Content-Type header to
-// application/json; charset=utf-8 . By default,
-// we'll get a 200 HTTP status code.
 app.get('/', (req, res) => {
   fetch(
-    'http://www.rai.it/dl/grr/archivio/ContentSet-d6361ec2-3bf9-4f19-9026-5a496a5da118.json'
+    'http://www.rai.it/dl/grr/archivio/ContentSet-65267d10-8c80-495a-b9b9-f2bd91d81bb4.json'
   )
   .then(body => body.json())
   .then( json => {
-   //console.log(json);
-    const relevant = json.items.slice(json.items.length - 1);
+    const relevant = json.items[0];
+    const uriFetches = fetch(relevant['mediauri']);
 
-    console.log(relevant);
-
-    const uriFetches = relevant
-    .map(r => r.mediauri)
-    .map(mediauri => fetch(mediauri));
-
-    return Promise.all(uriFetches).then(values => {
-      const urls = values.map(v => v.url);
-      console.log(urls);
-
-      res.json(
-        relevant.map((r, idx) => ({
-          uid: r.uniquename,
-          updateDate: setTime(r.title),
-          titleText: r.title,
+    return Promise.resolve(uriFetches).then(value => {
+      const url = value['url'];
+      res.json({
+          uid: relevant['uniquename'],
+          updateDate: setTime(relevant['title']),
+          titleText: relevant['title'],
           "mainText": "",
-          streamUrl: urls[idx].replace('http://', 'https://'),
+          streamUrl: url.replace('http://', 'https://'),
           redirectionUrl: "https://grr.rai.it",
-
-        }))
-      );
+      });
     })
   })
   .catch(err => {
