@@ -2,28 +2,30 @@
 
 const newrelic = require('newrelic');
 const express = require('express');
-const moment = require('moment-timezone');
 const fetch = require('node-fetch');
 
 const app = express();
 
-function setTime(date) {
-  var rome = moment.tz(date, "DD/MM/YYYY hh:mm", "Europe/Rome");
-  var utc = rome.clone().tz("Europe/London");
-  return utc.format();
-};
-
 app.get('/', (req, res) => {
-  fetch('https://www.raiplayradio.it/programmi/gr1/?json')
+  fetch('https://www.raiplayradio.it/radio1/?json')
+    .then(body => body.json())
+    .then(
+      json =>
+        json.blocchi
+          .find((blocco) => blocco.name == "Ultimi GR").lanci
+          .find((lancio) => lancio.name == "Ultimo GR1").pathID
+    )
+    .then(pathID => fetch(`https://www.raiplayradio.it${pathID}`))
     .then(body => body.json())
     .then(json => {
-      return fetch(`https://www.raiplayradio.it${json.pathFirstItem}`)
-    })
-    .then(body => body.json())
-    .then(json => {
+      const now = new Date().getTime();
+      const topOfHour = new Date(now - (now % (60 * 60 * 1000)));
       res.json({
         uid: json.ID,
-        updateDate: setTime(`${json.datePublished} ${json.timePublished}`),
+        // `updateDate` is a required response object attribute, but the feed
+        // object doesn't contain any time data, so let's just use top of the
+        // hour as an arbitrary time
+        updateDate: topOfHour.toISOString(),
         titleText: json.name,
         mainText: "",
         streamUrl: json.audio.contentUrl.replace('http://', 'https://'),
